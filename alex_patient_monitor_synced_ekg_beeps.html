@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Patient Monitor — Alex</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+:root{
+  --green:#65ff4a;
+  --green2:#baffad;
+  --dim:#1f8f1f;
+  --glass:rgba(2,12,4,.86);
+  --line:rgba(101,255,74,.78);
+  --warn:#ffe66d;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Share Tech Mono",monospace;
+  color:var(--green);
+  background:
+    radial-gradient(circle at 50% -10%,rgba(81,255,62,.22),transparent 35%),
+    radial-gradient(circle at 50% 110%,rgba(0,120,20,.16),transparent 30%),
+    #010301;
+  padding:18px;
+}
+
+.screen{
+  max-width:1220px;
+  margin:auto;
+  padding:20px;
+  border:2px solid var(--line);
+  border-radius:22px;
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(rgba(101,255,74,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(101,255,74,.035) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(255,255,255,.04),transparent 22%),
+    #020702;
+  background-size:20px 20px,20px 20px,100% 100%,100% 100%;
+  box-shadow:
+    0 0 60px rgba(101,255,74,.22),
+    inset 0 0 80px rgba(101,255,74,.08);
+}
+
+.screen:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,.035) 0,
+    rgba(255,255,255,.035) 1px,
+    transparent 3px,
+    transparent 6px
+  );
+  opacity:.25;
+  pointer-events:none;
+  mix-blend-mode:screen;
+}
+
+.topbar,.wave-panel,.panel{
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--glass);
+  box-shadow:
+    inset 0 0 28px rgba(101,255,74,.08),
+    0 0 18px rgba(101,255,74,.08);
+  position:relative;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:center;
+  padding:18px 22px;
+}
+
+.system{
+  color:var(--green2);
+  opacity:.9;
+  letter-spacing:2px;
+  font-size:.92rem;
+}
+
+h1{
+  margin:.2rem 0 0;
+  font-size:clamp(2.2rem,6vw,4.8rem);
+  letter-spacing:3px;
+  line-height:.95;
+  text-shadow:0 0 14px rgba(101,255,74,.75);
+}
+
+.record{
+  min-width:255px;
+  display:grid;
+  gap:8px;
+  color:var(--green2);
+  text-align:right;
+}
+
+.record span{
+  border:1px solid rgba(101,255,74,.35);
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+.wave-panel{
+  margin:16px 0;
+  height:120px;
+  padding:14px 190px 14px 70px;
+  overflow:hidden;
+}
+
+.lead-label{
+  position:absolute;
+  left:18px;
+  top:17px;
+  color:var(--green2);
+}
+
+.wave{
+  width:100%;
+  height:100%;
+  filter:drop-shadow(0 0 8px var(--green));
+}
+
+.wave polyline{
+  fill:none;
+  stroke:var(--green);
+  stroke-width:4;
+  stroke-linejoin:round;
+  stroke-linecap:round;
+  stroke-dasharray:1250;
+  animation:draw 833ms linear infinite;
+}
+
+
+.wave-panel.beat .wave polyline{
+  stroke-width:6;
+  filter:drop-shadow(0 0 14px var(--green));
+}
+
+.wave-panel.beat .bpm{
+  color:var(--warn);
+  text-shadow:0 0 18px rgba(255,230,109,.85);
+}
+
+@keyframes draw{
+  from{stroke-dashoffset:1250}
+  to{stroke-dashoffset:0}
+}
+
+.bpm{
+  position:absolute;
+  right:25px;
+  top:25px;
+  font-size:4.2rem;
+  text-shadow:0 0 14px rgba(101,255,74,.8);
+}
+
+.bpm small{
+  font-size:1.1rem;
+  color:var(--green2);
+}
+
+.dashboard{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+}
+
+.panel{
+  padding:19px 21px;
+  min-height:220px;
+}
+
+.panel-title{
+  color:var(--green2);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  border-bottom:1px solid rgba(101,255,74,.45);
+  padding-bottom:9px;
+  margin-bottom:14px;
+}
+
+.identity{
+  grid-row:span 2;
+}
+
+.name{
+  font-size:clamp(4rem,9vw,7.2rem);
+  letter-spacing:8px;
+  text-shadow:0 0 20px rgba(101,255,74,.7);
+}
+
+.data-grid{
+  display:grid;
+  gap:10px;
+}
+
+.data-grid div{
+  border-left:4px solid rgba(101,255,74,.55);
+  padding-left:12px;
+}
+
+.data-grid span{
+  display:block;
+  color:var(--green2);
+  font-size:.9rem;
+  text-transform:uppercase;
+}
+
+.data-grid strong{
+  display:block;
+  font-size:1.35rem;
+  margin-top:3px;
+}
+
+.vital-row{
+  display:grid;
+  grid-template-columns:1.2fr .9fr .8fr;
+  align-items:baseline;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid rgba(101,255,74,.35);
+}
+
+.vital-row span{
+  color:var(--green2);
+}
+
+.vital-row strong{
+  font-size:2rem;
+  text-shadow:0 0 12px rgba(101,255,74,.7);
+}
+
+.vital-row em{
+  font-style:normal;
+  color:var(--green2);
+  font-size:.9rem;
+}
+
+.critical strong{
+  font-size:3.2rem;
+  color:var(--warn);
+  text-shadow:0 0 12px rgba(255,230,109,.65);
+}
+
+.progress-head{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.meter{
+  flex:1;
+  height:34px;
+  border:1px solid var(--line);
+  padding:4px;
+  background:rgba(0,0,0,.45);
+}
+
+.meter div{
+  width:25%;
+  height:100%;
+  background:linear-gradient(90deg,var(--dim),var(--green));
+  box-shadow:0 0 14px rgba(101,255,74,.9);
+}
+
+.progress-head b{
+  font-size:2.5rem;
+}
+
+.checklist{
+  list-style:none;
+  margin:18px 0 0;
+  padding:0;
+}
+
+.checklist li{
+  margin:9px 0;
+  color:#dfffd9;
+  font-size:1.05rem;
+}
+
+.checklist li:before{
+  content:"□";
+  margin-right:11px;
+  color:var(--green2);
+}
+
+.checklist li.done:before{
+  content:"☑";
+  color:var(--green);
+}
+
+.excellent{
+  font-size:clamp(2.7rem,6vw,4.5rem);
+  color:var(--warn);
+  text-shadow:0 0 16px rgba(255,230,109,.55);
+  margin:22px 0 10px;
+}
+
+.doctor{
+  font-size:3rem;
+  letter-spacing:4px;
+  text-shadow:0 0 16px rgba(101,255,74,.75);
+}
+
+.badge{
+  display:inline-block;
+  margin-top:18px;
+  border:1px solid rgba(101,255,74,.55);
+  padding:8px 12px;
+  border-radius:8px;
+  color:var(--green2);
+}
+
+.count{
+  font-size:1.45rem;
+  color:var(--green2);
+}
+
+.countdown-doctor{
+  grid-column:span 2;
+  text-align:center;
+}
+
+.countdown-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:18px 0;
+}
+
+.timebox{
+  border:1px solid rgba(101,255,74,.55);
+  border-radius:12px;
+  padding:14px 8px;
+  background:rgba(0,0,0,.45);
+  box-shadow:inset 0 0 18px rgba(101,255,74,.08);
+}
+
+.timebox strong{
+  display:block;
+  font-size:clamp(2rem,5vw,4rem);
+  color:var(--warn);
+  text-shadow:0 0 14px rgba(255,230,109,.55);
+}
+
+.timebox span{
+  display:block;
+  color:var(--green2);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-top:4px;
+}
+
+.countdown-note{
+  color:#dfffd9;
+  font-size:1.1rem;
+}
+
+.notes p{
+  border-bottom:1px solid rgba(101,255,74,.22);
+  margin:0;
+  padding:9px 0;
+  color:#dfffd9;
+}
+
+.notes b{
+  color:var(--green2);
+}
+
+.birthday{
+  grid-column:span 2;
+  text-align:center;
+}
+
+.birthday h2{
+  font-size:clamp(2rem,5vw,4rem);
+  margin:20px 0 10px;
+  letter-spacing:4px;
+  text-shadow:0 0 16px rgba(101,255,74,.7);
+}
+
+.birthday p{
+  font-size:1.25rem;
+  color:#dfffd9;
+}
+
+.tag{
+  margin:18px auto 0;
+  display:inline-block;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:10px 18px;
+  color:var(--green2);
+}
+
+
+.audio-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.monitor-button {
+  border: 1px solid rgba(101,255,74,.75);
+  background: rgba(0,0,0,.65);
+  color: var(--green);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 1rem;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: inset 0 0 14px rgba(101,255,74,.08), 0 0 10px rgba(101,255,74,.1);
+}
+.monitor-button:hover {
+  background: rgba(101,255,74,.12);
+}
+.monitor-button.warning {
+  color: var(--warn);
+  border-color: rgba(255,230,109,.75);
+}
+.sound-status {
+  margin-top: 12px;
+  color: var(--green2);
+}
+.sound-status.online {
+  color: var(--warn);
+  text-shadow: 0 0 10px rgba(255,230,109,.5);
+}
+
+@media (max-width:980px){
+  .dashboard{
+    grid-template-columns:1fr 1fr;
+  }
+  .identity{
+    grid-row:auto;
+  }
+  .birthday{
+    grid-column:span 2;
+  }
+}
+
+@media (max-width:680px){
+  body{
+    padding:8px;
+  }
+  .screen{
+    padding:12px;
+    border-radius:14px;
+  }
+  .topbar{
+    display:block;
+  }
+  .record{
+    text-align:left;
+    margin-top:14px;
+  }
+  .wave-panel{
+    padding:18px 12px 10px;
+    height:100px;
+  }
+  .bpm{
+    position:static;
+    font-size:2.5rem;
+    margin-top:-20px;
+    text-align:right;
+  }
+  .dashboard{
+    grid-template-columns:1fr;
+  }
+  .birthday,
+  .countdown-doctor{
+    grid-column:span 1;
+  }
+  .vital-row{
+    grid-template-columns:1fr auto;
+  }
+  .vital-row em{
+    display:none;
+  }
+  .countdown-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+  </style>
+</head>
+
+<body>
+  <main class="screen">
+    <section class="topbar">
+      <div>
+        <div class="system">ANESTHESIA CARE UNIT // STUDENT MONITOR</div>
+        <h1>PATIENT MONITOR — ALEX</h1>
+      </div>
+      <div class="record">
+        <span>RECORD ID: ALEX-20</span>
+        <span>MODE: BIRTHDAY</span>
+        <span>STATUS: CONSCIOUS</span>
+      </div>
+    </section>
+
+    <section class="wave-panel">
+      <div class="lead-label">ECG II</div>
+      <svg class="wave" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="0,70 180,70 210,70 225,42 240,95 255,12 275,70 410,70 430,55 445,70 700,70 725,70 740,40 755,98 770,20 790,70 1200,70"/>
+      </svg>
+      <div class="bpm">72 <small>BPM</small></div>
+    </section>
+
+    <section class="dashboard">
+      <article class="panel identity">
+        <div class="panel-title">Patient Data</div>
+        <div class="name">ALEX</div>
+        <div class="data-grid">
+          <div><span>Age</span><strong id="live-age">20</strong></div>
+          <div><span>Status</span><strong>Conscious</strong></div>
+          <div><span>Current Role</span><strong>Pre-Med Student</strong></div>
+          <div><span>Target Specialty</span><strong>Anesthesiology</strong></div>
+          <div><span>Location</span><strong>Creighton University</strong></div>
+        </div>
+      </article>
+
+      <article class="panel vitals">
+        <div class="panel-title">Current Status</div>
+        <div class="vital-row critical"><span>HEART RATE</span><strong>72</strong><em>BPM</em></div>
+        <div class="vital-row"><span>AGE</span><strong id="status-age">20</strong><em>YEARS</em></div>
+        <div class="vital-row"><span>YEARS TO ANESTHESIOLOGIST</span><strong id="years-remaining">10.0</strong><em>COUNTDOWN</em></div>
+        <div class="vital-row"><span>CAFFEINE</span><strong>HIGH</strong><em>PRN</em></div>
+        <div class="vital-row"><span>SLEEP</span><strong>LOW</strong><em>EXPECTED</em></div>
+        <div class="vital-row"><span>MOTIVATION</span><strong>HIGH</strong><em>STABLE</em></div>
+        <div class="vital-row"><span>BANK ACCOUNT</span><strong>LOW</strong><em>COLLEGE</em></div>
+      </article>
+
+      <article class="panel progress">
+        <div class="panel-title">Road to Dr. Alex</div>
+        <div class="progress-head">
+          <div class="meter"><div></div></div>
+          <b>25%</b>
+        </div>
+        <ol class="checklist">
+          <li class="done">High School</li>
+          <li class="done">Started Pre-Med</li>
+          <li class="done">Freshman Year</li>
+          <li class="done">Sophomore Year</li>
+          <li>Junior Year</li>
+          <li>Senior Year</li>
+          <li>MCAT</li>
+          <li>Medical School</li>
+          <li>Residency</li>
+          <li>Board Certification</li>
+        </ol>
+      </article>
+
+      <article class="panel prognosis">
+        <div class="panel-title">Clinical Impression</div>
+        <div class="excellent">EXCELLENT</div>
+        <p>Expected outcome:</p>
+        <div class="doctor">DR. ALEX</div>
+        <div class="badge">PLEASE COUNT BACKWARDS FROM 10</div>
+        <p class="count">10... 9... 8... 7... 6...</p>
+        <div class="audio-controls">
+          <button class="monitor-button" id="activate-monitor" type="button">▶ Activate Monitor</button>
+          <button class="monitor-button warning" id="caffeine-alarm" type="button">⚠ Caffeine Level Critical</button>
+          <button class="monitor-button" id="silence-monitor" type="button">■ Silence</button>
+        </div>
+        <div class="sound-status" id="sound-status">Sound System: Offline</div>
+
+      </article>
+
+      <article class="panel countdown-doctor">
+        <div class="panel-title">Live Countdown to Anesthesiologist Alex</div>
+        <div class="countdown-grid">
+          <div class="timebox"><strong id="days">---</strong><span>Days</span></div>
+          <div class="timebox"><strong id="hours">--</strong><span>Hours</span></div>
+          <div class="timebox"><strong id="minutes">--</strong><span>Minutes</span></div>
+          <div class="timebox"><strong id="seconds">--</strong><span>Seconds</span></div>
+        </div>
+        <p class="countdown-note">Estimated target: Anesthesiology Residency Finish Line</p>
+        <p class="countdown-note">Current projection: July 1, 2036</p>
+      </article>
+
+      <article class="panel notes">
+        <div class="panel-title">Patient Notes</div>
+        <p><b>Age 5:</b> Wouldn’t stop talking.</p>
+        <p><b>Age 10:</b> Discovered theater.</p>
+        <p><b>Age 15:</b> Still wouldn’t stop talking.</p>
+        <p><b>Age 20:</b> Claims he’ll be a doctor.</p>
+        <p><b>Current Assessment:</b> Looking promising.</p>
+      </article>
+
+      <article class="panel birthday">
+        <div class="panel-title">Message</div>
+        <h2>HAPPY 20TH BIRTHDAY, ALEX!</h2>
+        <p>Love, Dan, Jacqui, Shane, Logan, Jackson, Skylar, and Ryder</p>
+        <div class="tag">KEEP GOING. WE’RE PROUD OF YOU.</div>
+      </article>
+    </section>
+  </main>
+
+<script>
+  const doctorTargetDate = new Date("2036-07-01T09:00:00");
+  const alexBirthdayMonth = 5; // June, because JavaScript counts months from 0
+  const alexBirthdayDay = 11;
+  const alexBirthYear = 2006; // Turning 20 on June 11, 2026
+
+  function updateLiveAge() {
+    const now = new Date();
+    let age = now.getFullYear() - alexBirthYear;
+
+    const hasHadBirthdayThisYear =
+      now.getMonth() > alexBirthdayMonth ||
+      (now.getMonth() === alexBirthdayMonth && now.getDate() >= alexBirthdayDay);
+
+    if (!hasHadBirthdayThisYear) age--;
+
+    const ageElement = document.getElementById("live-age");
+    if (ageElement) ageElement.textContent = age;
+
+    const ageElement2 = document.getElementById("status-age");
+    if (ageElement2) ageElement2.textContent = age;
+  }
+
+  function updateYearsRemaining() {
+    const now = new Date();
+    const years = (doctorTargetDate - now) / (1000 * 60 * 60 * 24 * 365.25);
+    const el = document.getElementById("years-remaining");
+    if (el) el.textContent = Math.max(0, years).toFixed(1);
+  }
+
+  function updateDoctorCountdown() {
+    const now = new Date();
+    const diff = doctorTargetDate - now;
+
+    if (diff <= 0) {
+      document.getElementById("days").textContent = "0";
+      document.getElementById("hours").textContent = "00";
+      document.getElementById("minutes").textContent = "00";
+      document.getElementById("seconds").textContent = "00";
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    document.getElementById("days").textContent = days.toLocaleString();
+    document.getElementById("hours").textContent = String(hours).padStart(2, "0");
+    document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+    document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+  }
+
+
+  let audioContext = null;
+  let beepTimer = null;
+  let monitoringActive = false;
+
+  function getAudioContext() {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContext;
+  }
+
+  function tone(frequency, duration, type = "sine", volume = 0.08, delay = 0) {
+    const ctx = getAudioContext();
+    const start = ctx.currentTime + delay;
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.02);
+  }
+
+  function startupSequence() {
+    tone(520, 0.08, "square", 0.05, 0.00);
+    tone(660, 0.08, "square", 0.05, 0.14);
+    tone(780, 0.10, "square", 0.05, 0.28);
+    tone(980, 0.16, "sine", 0.04, 0.45);
+  }
+
+  function heartbeatBeep() {
+    // Lower, rounder bedside-monitor style beep.
+    tone(720, 0.070, "sine", 0.065, 0);
+    tone(620, 0.045, "sine", 0.035, 0.055);
+
+    // Sync the visible ECG with the audible beep.
+    const wavePanel = document.querySelector(".wave-panel");
+    if (wavePanel) {
+      wavePanel.classList.add("beat");
+      setTimeout(() => wavePanel.classList.remove("beat"), 120);
+    }
+  }
+
+  function startHeartbeat() {
+    stopHeartbeat();
+
+    // Restart ECG animation so the visual sweep begins on the same beat as the sound.
+    const wave = document.querySelector(".wave polyline");
+    if (wave) {
+      wave.style.animation = "none";
+      void wave.offsetWidth;
+      wave.style.animation = "draw 833ms linear infinite";
+    }
+
+    heartbeatBeep();
+    beepTimer = setInterval(heartbeatBeep, 833); // 72 BPM = about 0.833 seconds per beat
+  }
+
+  function stopHeartbeat() {
+    if (beepTimer) {
+      clearInterval(beepTimer);
+      beepTimer = null;
+    }
+  }
+
+  function caffeineAlarm() {
+    tone(990, 0.12, "square", 0.07, 0.00);
+    tone(740, 0.12, "square", 0.07, 0.18);
+    tone(990, 0.12, "square", 0.07, 0.36);
+    tone(740, 0.12, "square", 0.07, 0.54);
+    tone(990, 0.2, "sawtooth", 0.045, 0.78);
+  }
+
+  function setSoundStatus(text, online = false) {
+    const status = document.getElementById("sound-status");
+    if (status) {
+      status.textContent = text;
+      status.classList.toggle("online", online);
+    }
+  }
+
+  async function activateMonitorSound() {
+    const ctx = getAudioContext();
+    if (ctx.state === "suspended") await ctx.resume();
+
+    if (!monitoringActive) {
+      monitoringActive = true;
+      setSoundStatus("Sound System: Initializing Patient Record...", true);
+      startupSequence();
+
+      setTimeout(() => {
+        setSoundStatus("Sound System: Monitoring — 72 BPM", true);
+        startHeartbeat();
+      }, 900);
+    }
+  }
+
+  function silenceMonitorSound() {
+    monitoringActive = false;
+    stopHeartbeat();
+    setSoundStatus("Sound System: Silenced", false);
+  }
+
+  document.getElementById("activate-monitor")?.addEventListener("click", activateMonitorSound);
+  document.getElementById("caffeine-alarm")?.addEventListener("click", async () => {
+    const ctx = getAudioContext();
+    if (ctx.state === "suspended") await ctx.resume();
+    caffeineAlarm();
+    setSoundStatus("Warning: Caffeine Level Critical", true);
+    setTimeout(() => {
+      if (monitoringActive) setSoundStatus("Sound System: Monitoring — 72 BPM", true);
+    }, 1800);
+  });
+  document.getElementById("silence-monitor")?.addEventListener("click", silenceMonitorSound);
+
+
+  updateLiveAge();
+  updateYearsRemaining();
+  updateDoctorCountdown();
+
+  setInterval(updateLiveAge, 60 * 60 * 1000);
+  setInterval(updateYearsRemaining, 60 * 1000);
+  setInterval(updateDoctorCountdown, 1000);
+</script>
+</body>
+</html>
