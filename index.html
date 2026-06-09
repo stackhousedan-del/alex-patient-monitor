@@ -139,7 +139,18 @@ h1{
   stroke-linejoin:round;
   stroke-linecap:round;
   stroke-dasharray:1250;
-  animation:draw 2.8s linear infinite;
+  animation:draw 833ms linear infinite;
+}
+
+
+.wave-panel.beat .wave polyline{
+  stroke-width:6;
+  filter:drop-shadow(0 0 14px var(--green));
+}
+
+.wave-panel.beat .bpm{
+  color:var(--warn);
+  text-shadow:0 0 18px rgba(255,230,109,.85);
 }
 
 @keyframes draw{
@@ -699,11 +710,29 @@ h1{
   }
 
   function heartbeatBeep() {
-    tone(880, 0.055, "sine", 0.055, 0);
+    // Lower, rounder bedside-monitor style beep.
+    tone(720, 0.070, "sine", 0.065, 0);
+    tone(620, 0.045, "sine", 0.035, 0.055);
+
+    // Sync the visible ECG with the audible beep.
+    const wavePanel = document.querySelector(".wave-panel");
+    if (wavePanel) {
+      wavePanel.classList.add("beat");
+      setTimeout(() => wavePanel.classList.remove("beat"), 120);
+    }
   }
 
   function startHeartbeat() {
     stopHeartbeat();
+
+    // Restart ECG animation so the visual sweep begins on the same beat as the sound.
+    const wave = document.querySelector(".wave polyline");
+    if (wave) {
+      wave.style.animation = "none";
+      void wave.offsetWidth;
+      wave.style.animation = "draw 833ms linear infinite";
+    }
+
     heartbeatBeep();
     beepTimer = setInterval(heartbeatBeep, 833); // 72 BPM = about 0.833 seconds per beat
   }
@@ -775,5 +804,4 @@ h1{
   setInterval(updateDoctorCountdown, 1000);
 </script>
 </body>
-</html>
 </html>
